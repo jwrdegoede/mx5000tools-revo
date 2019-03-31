@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <pbm.h>
+#include <netpbm/pbm.h>
 #include "config.h"
 
 
