@@ -1,5 +1,32 @@
+# autofoo stuff
+.deps
+.libs
+INSTALL
+Makefile.in
+Makefile
+aclocal.m4
+autom4te.cache
+compile
+config.guess
+config.h.in
+config.h
+config.log
+config.status
+config.sub
+configure
+depcomp
+install-sh
+libtool
+ltmain.sh
+missing
+stamp-h1
+
+# Editor backup files
+*~
+
 # Object files
 *.o
+*.lo
 *.ko
 *.obj
 *.elf
@@ -7,6 +34,7 @@
 # Libraries
 *.lib
 *.a
+*.la
 
 # Shared objects (inc. Windows DLLs)
 *.dll
@@ -15,9 +43,7 @@
 *.dylib
 
 # Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+mx5000tools/mx5000-tool/mx5000-tool
+mx5000tools/mx5000d/mx5000d
+mx5000tools/tests/mx5000-test
+mx5000tools/tests/test-info
