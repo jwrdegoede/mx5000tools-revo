@@ -93,10 +93,11 @@ int mx5000_open(void)
 
 
 
-int mx5000_send_report(int fd, const char *buf, __u32 reportid)
+int mx5000_send_report(int fd, const char *_buf, __u32 reportid)
 {
   struct hiddev_report_info rinfo;
   struct hiddev_usage_ref uref;
+  const unsigned char *buf = (const void *)_buf;
   int size;
   __u32 usage_code;
   int i, err;
