@@ -4,12 +4,7 @@ mx5000tools
 mx5000tools are tools to control the extra features on the Logitech MX
 5000 bluetooth cordless keyboard. 
 
-Currently, these tools can not be used while the keyboard is in HCI
-mode because the Linux Bluetooth code (bluez) does not support full
-HID. Luckily, the Logitech MX 5000 dongle emulates a USB hub. So the
-features can be accessed while running it as a regular USB device.
-
-For the tools to work, you need to have the support for HIDDEV
+For the tools to work, you need to have the support for HIDRAW
 compiled into your kernel. It currently only works on Linux, but it is
 probably relatively easy to port it to other operating systems, by
 rewriting the mx5000_open* and mx5000_send_reports functions.

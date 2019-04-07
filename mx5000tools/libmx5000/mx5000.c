@@ -28,29 +28,50 @@
 #include <errno.h>
 
 #include <asm/types.h>
-#include <linux/hiddev.h>
+#include <linux/hidraw.h>
 
 #include "libmx5000/mx5000.h"
 
-#define HIDDEVDIR "/dev/usb/"
+#define BUS_USB 3
+#define BUS_BT  5
+
+typedef unsigned short u16;
 
 int mx5000_open_path(const char *path)
 {
   int fd = -1;
   int err = 0;
-  char buf[256];
+  struct hidraw_devinfo devinfo;
 
   if (!path)
     return -1;
+
+  /*
+   * Backward compat workaround, if we are asked to open an old style usb
+   * hiddev device, fallback to automatically selecting the first mx5000
+   * hidraw device.
+   */
+  if (strstr(path, "hiddev"))
+    return mx5000_open();
 
   fd = open(path, O_RDWR);
   if (fd<0)
     return fd;
 
-  err = ioctl(fd, HIDIOCGNAME(256) , buf);
+  err = ioctl(fd, HIDIOCGRAWINFO, &devinfo);
   if (err < 0)
     goto close;
-  if (strcmp("Logitech Logitech BT Mini-Receiver", buf))
+
+  /* Vendor must be Logitech */
+  if (devinfo.vendor != 0x046d)
+    goto close;
+
+  /*
+   * USB c70a is the BT mini receiver in HID proxy mode
+   * BT  b305 is the kbd paired over Bluetooth.
+   */
+  if (!(devinfo.bustype == BUS_USB && (u16)devinfo.product == 0xc70a) &&
+      !(devinfo.bustype == BUS_BT  && (u16)devinfo.product == 0xb305))
     goto close;
 
   return fd;
@@ -68,15 +89,16 @@ int mx5000_open(void)
   DIR *dir;
   char devname[PATH_MAX];
 
-  dir = opendir(HIDDEVDIR);
+  dir = opendir("/dev");
   if (dir == NULL)
     return -1;
 
   while((dirent = readdir(dir)) != NULL) {
-    if (dirent->d_type != DT_CHR)
+    if (dirent->d_type != DT_CHR ||
+        strncmp(dirent->d_name, "hidraw", 6))
       continue;
 
-    strcpy(devname, HIDDEVDIR);
+    strcpy(devname, "/dev/");
     strcat(devname, dirent->d_name);
 
     fd = mx5000_open_path(devname);
@@ -95,53 +117,27 @@ int mx5000_open(void)
 
 int mx5000_send_report(int fd, const char *_buf, __u32 reportid)
 {
-  struct hiddev_report_info rinfo;
-  struct hiddev_usage_ref uref;
-  const unsigned char *buf = (const void *)_buf;
-  int size;
-  __u32 usage_code;
-  int i, err;
+  char buf[46];
+  int err, size;
   
   switch(reportid) {
   case 0x10:
     size = 6;
-    usage_code = 0xff000001;
     break;
   case 0x11:
     size = 19;
-    usage_code = 0xff000002;
     break;
   case 0x12:
     size = 45;
-    usage_code = 0xff000003;
     break;
   default:
     return -1;
   }
 
-
-  for (i = 0; i < size; i++) {
-    memset(&uref, 0, sizeof(uref));
-    uref.report_type = HID_REPORT_TYPE_OUTPUT;
-    uref.report_id   = reportid;
-    uref.field_index = 0;
-    uref.usage_index = i;
-    uref.usage_code = usage_code;
-    uref.value       = buf[i];
-    err = ioctl(fd, HIDIOCSUSAGE, &uref);
-    if (err < 0) {
-      fprintf(stderr, "error %d, errno %d\n", err, errno);
-      return err;
-    }
-  }
-
-  memset(&rinfo, 0, sizeof(rinfo));
-  rinfo.report_type = HID_REPORT_TYPE_OUTPUT;
-  rinfo.report_id   = reportid;
-  rinfo.num_fields  = 1;
-  err = ioctl(fd, HIDIOCSREPORT, &rinfo);
-
-  return err;
+  buf[0] = reportid;
+  memcpy(buf + 1, _buf, size);
+  err = write(fd, buf, size + 1);
+  return (err == (size + 1)) ? 0 : err;
 }
 
 void mx5000_set_icons(int fd, enum iconstatus email, enum iconstatus messenger, 
