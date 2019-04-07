@@ -14,7 +14,7 @@ compiled into your kernel. It currently only works on Linux, but it is
 probably relatively easy to port it to other operating systems, by
 rewriting the mx5000_open* and mx5000_send_reports functions.
 
-mx5000tools includes 3 main components:
+mx5000tools includes 2 main components:
 
 - libmx5000
   
@@ -28,15 +28,6 @@ mx5000tools includes 3 main components:
   This simple command-line tool allows users to control what is
   displayed on the LCD. It only depends on libmx5000.
 
-- mx5000d
-  
-  Some of the "special" keys on the MX5000 are not properly handled by
-  the HID driver present in the Linux 2.6.17 kernel. This daemon
-  listens for those events and emits corresponding events on a uinput
-  event device (this requires the UINPUT driver in the kernel).
-  It also translates the zoom scroller events into scroll wheel events.
-  It depends on glib.
-
 
 
 This library was based on the work of E. Heidstra <boesj27@gmail.com>
@@ -46,8 +37,7 @@ on mx5000lib (http://sourceforge.net/projects/mx5000lib/)
 
 
 TODO:
- - Display notification from the galago framework on the LCD through
- the mx5000d daemon.
+ - Display notification from the galago framework on the LCD?
  - Display the volume, maybe using the same gstreamer stuff used by
  the Gnome mixer applet.
 

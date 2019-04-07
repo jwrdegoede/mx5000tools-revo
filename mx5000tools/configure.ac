@@ -16,15 +16,7 @@ AC_CHECK_HEADER([linux/hiddev.h], [], [AC_MSG_ERROR([You need kernel headers tha
 AC_CHECK_HEADER([netpbm/pbm.h], [], [AC_MSG_ERROR([You need pbm.h from the netpbm package\, possible the netpbm-devel package of your distribution])])
 AC_CHECK_LIB([netpbm],[pbm_readpbm], [], [AC_MSG_ERROR([You need netpbm installed])])
 
-
-
-GLIB_REQUIRED=2.8.0
-
-PKG_PROG_PKG_CONFIG(0.16)
-PKG_CHECK_MODULES(MX5000D, glib-2.0 >= $GLIB_REQUIRED )
-
 AC_OUTPUT(Makefile
 libmx5000/Makefile
 mx5000-tool/Makefile
-mx5000d/Makefile
 tests/Makefile )
