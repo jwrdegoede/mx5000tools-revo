@@ -186,24 +186,27 @@ void mx5000_set_kbd_opts(int fd, enum kbdopts opts)
 
 void mx5000_set_time(int fd, time_t mytime)
 {
-  int a,b;
   struct tm mytm;
   
+  char hourminute[] = { 0x01, 0x80, 0x31, 0x00, 0x00, 0x00 };
   char daymonth[] = {   0x01, 0x80, 0x32, 0x00, 0x00, 0x00 };
-  char hourminute[] = { 0x01, 0x80, 0x31, 0x19, 0x00, 0x00 };
+  char year[] = {       0x01, 0x80, 0x33, 0x00, 0x00, 0x00 };
 
   localtime_r(&mytime, &mytm);
 
-
+  daymonth[3]= (mytm.tm_wday + 6) % 7;
   daymonth[4]= mytm.tm_mday;
   daymonth[5]= mytm.tm_mon;
 
+  hourminute[3] = mytm.tm_sec;
   hourminute[4] = mytm.tm_min;
   hourminute[5] = mytm.tm_hour;
-  
-  a = mx5000_send_report(fd, daymonth, 0x10);
-  b = mx5000_send_report(fd, hourminute, 0x10);
 
+  year[3] = mytm.tm_year % 100;
+
+  mx5000_send_report(fd, hourminute, 0x10);
+  mx5000_send_report(fd, daymonth, 0x10);
+  mx5000_send_report(fd, year, 0x10);
 }
 
 
