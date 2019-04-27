@@ -47,7 +47,7 @@ int mx5000_open_path(const char *path)
 
   /*
    * Backward compat workaround, if we are asked to open an old style usb
-   * hiddev device, fallback to automatically selecting the first mx5000
+   * hiddev device, fallback to automatically selecting the first mx5000/mx5500
    * hidraw device.
    */
   if (strstr(path, "hiddev"))
@@ -66,11 +66,15 @@ int mx5000_open_path(const char *path)
     goto close;
 
   /*
-   * USB c70a is the BT mini receiver in HID proxy mode
-   * BT  b305 is the kbd paired over Bluetooth.
+   * USB c70a is the MX5000 BT mini receiver in HID proxy mode
+   * USB c71c is the MX5500 BT mini receiver in HID proxy mode
+   * BT  b305 is the MX5000 kbd paired over Bluetooth.
+   * BT  b30b is the MX5500 kbd paired over Bluetooth.
    */
   if (!(devinfo.bustype == BUS_USB && (u16)devinfo.product == 0xc70a) &&
-      !(devinfo.bustype == BUS_BT  && (u16)devinfo.product == 0xb305))
+      !(devinfo.bustype == BUS_USB && (u16)devinfo.product == 0xc71c) &&
+      !(devinfo.bustype == BUS_BT  && (u16)devinfo.product == 0xb305) &&
+      !(devinfo.bustype == BUS_BT  && (u16)devinfo.product == 0xb30b))
     goto close;
 
   return fd;
