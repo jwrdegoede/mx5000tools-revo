@@ -6,7 +6,7 @@ AM_CFLAGS = -Wall
 lib_LTLIBRARIES = libmx5000.la
 
 
-libmx5000_la_SOURCES = mx5000.c mx5000screencontent.c mx5000image.c
+libmx5000_la_SOURCES = mx5000.c mx5000screencontent.c mx5000image.c hidraw_lib.c hidraw_lib.h
 
 libmx5000_la_LIBADD = -lnetpbm
 

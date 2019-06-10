@@ -15,112 +15,45 @@
  *  along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/types.h>
-#include <dirent.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <errno.h>
-
-#include <asm/types.h>
-#include <linux/hidraw.h>
-
 #include "libmx5000/mx5000.h"
-
-#define BUS_USB 3
-#define BUS_BT  5
+#include "libmx5000/hidraw_lib.h"
 
 typedef unsigned short u16;
 
+static const struct lib_hidraw_id hidraw_ids[] = {
+	/* MX5000 */
+	{ { BUS_USB,       0x046d, 0xc70a } },
+	{ { BUS_BLUETOOTH, 0x046d, 0xb305 } },
+	/* MX5500 */
+	{ { BUS_USB,       0x046d, 0xc71c } },
+	{ { BUS_BLUETOOTH, 0x046d, 0xb30b } },
+	/* Terminator */
+	{}
+};
+
 int mx5000_open_path(const char *path)
 {
-  int fd = -1;
-  int err = 0;
-  struct hidraw_devinfo devinfo;
-
-  if (!path)
-    return -1;
-
   /*
    * Backward compat workaround, if we are asked to open an old style usb
    * hiddev device, fallback to automatically selecting the first mx5000/mx5500
    * hidraw device.
    */
   if (strstr(path, "hiddev"))
-    return mx5000_open();
+    return lib_hidraw_find_device(hidraw_ids);
 
-  fd = open(path, O_RDWR);
-  if (fd<0)
-    return fd;
-
-  err = ioctl(fd, HIDIOCGRAWINFO, &devinfo);
-  if (err < 0)
-    goto close;
-
-  /* Vendor must be Logitech */
-  if (devinfo.vendor != 0x046d)
-    goto close;
-
-  /*
-   * USB c70a is the MX5000 BT mini receiver in HID proxy mode
-   * USB c71c is the MX5500 BT mini receiver in HID proxy mode
-   * BT  b305 is the MX5000 kbd paired over Bluetooth.
-   * BT  b30b is the MX5500 kbd paired over Bluetooth.
-   */
-  if (!(devinfo.bustype == BUS_USB && (u16)devinfo.product == 0xc70a) &&
-      !(devinfo.bustype == BUS_USB && (u16)devinfo.product == 0xc71c) &&
-      !(devinfo.bustype == BUS_BT  && (u16)devinfo.product == 0xb305) &&
-      !(devinfo.bustype == BUS_BT  && (u16)devinfo.product == 0xb30b))
-    goto close;
-
-  return fd;
-
- close:
-  close(fd);
-
-  return -1;
+  return lib_hidraw_open_device(path, hidraw_ids);
 }
 
 int mx5000_open(void)
 {
-  int fd = -1;
-  struct dirent *dirent;
-  DIR *dir;
-  char devname[PATH_MAX];
-
-  dir = opendir("/dev");
-  if (dir == NULL)
-    return -1;
-
-  while((dirent = readdir(dir)) != NULL) {
-    if (dirent->d_type != DT_CHR ||
-        strncmp(dirent->d_name, "hidraw", 6))
-      continue;
-
-    strcpy(devname, "/dev/");
-    strcat(devname, dirent->d_name);
-
-    fd = mx5000_open_path(devname);
-
-    if (fd >= 0)
-      break;
-  }
-
-  closedir(dir);
-
-  return fd;
+  return lib_hidraw_find_device(hidraw_ids);
 }
-
-
-
 
 int mx5000_send_report(int fd, const char *_buf, __u32 reportid)
 {
-  char buf[46];
+  unsigned char buf[46];
   int err, size;
   
   switch(reportid) {
@@ -139,7 +72,7 @@ int mx5000_send_report(int fd, const char *_buf, __u32 reportid)
 
   buf[0] = reportid;
   memcpy(buf + 1, _buf, size);
-  err = write(fd, buf, size + 1);
+  err = lib_hidraw_send_output_report(fd, hidraw_ids, buf, size + 1);
   return (err == (size + 1)) ? 0 : err;
 }
 
