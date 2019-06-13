@@ -24,10 +24,10 @@ typedef unsigned short u16;
 
 static const struct lib_hidraw_id hidraw_ids[] = {
 	/* MX5000 */
-	{ { BUS_USB,       0x046d, 0xc70a } },
+	{ { BUS_USB,       0x046d, 0xb305 } },
 	{ { BUS_BLUETOOTH, 0x046d, 0xb305 } },
 	/* MX5500 */
-	{ { BUS_USB,       0x046d, 0xc71c } },
+	{ { BUS_USB,       0x046d, 0xb30b } },
 	{ { BUS_BLUETOOTH, 0x046d, 0xb30b } },
 	/* Terminator */
 	{}
